@@ -42,6 +42,7 @@ git clone http://anongit.freedesktop.org/git/dbus/dbus.git
 set -e
 
 # --- DOXYGEN ---
+# MISSING: dot (graphviz), asciidoc
 # Dependencies:
 # * NOTE: Need bison and flex installed (not built from source here)
 e cd "$MYDIR"
@@ -51,6 +52,7 @@ e cd build
 e cmake -G "Unix Makefiles" -D CMAKE_INSTALL_PREFIX=$PWD/../P/ ..
 e make -j8
 e make install
+
 
 # --- DLT DAEMON ---
 # Dependencies: Not much that I know.  maybe zlib or something simple
@@ -116,7 +118,7 @@ e cd "$MYDIR"
 e cd dbus
 e git checkout dbus-1.9.0
 for f in ../common-api-dbus-runtime/src/dbus-patches/*.patch ; do
-  patch -p1 -N <"$f" 
+  patch -p1 -N <"$f" || true
 done
 e ./autogen.sh
 e ./configure --prefix $PWD/P
