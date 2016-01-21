@@ -50,7 +50,7 @@ e mkdir -p build
 e cd build
 e cmake -G "Unix Makefiles" -D CMAKE_INSTALL_PREFIX=$PWD/../P/ ..
 e make -j8
-# No need to install - we will make sure the binary is in $PATH
+e make install
 
 # --- DLT DAEMON ---
 # Dependencies: Not much that I know.  maybe zlib or something simple
@@ -100,7 +100,7 @@ e cd "$MYDIR"
 e cd common-api-runtime
 e mkdir -p build
 e export PKG_CONFIG_PATH=$DLT_PKG_CONFIG_PATH  # so cmake can find DLT
-e export PATH=$PATH:$PWD/../doxygen/P/bin/     # so cmake can find doxygen exe
+e export PATH=$PATH:$PWD/../doxygen/P/bin/
 e cd build
 e grep cmake ../INSTALL | sed 's@^\$@@' | sh 
 e make -j8
@@ -131,7 +131,7 @@ e make install
 e cd "$MYDIR"
 e cd common-api-dbus-runtime
 e export CommonAPI_DIR=$PWD/../common-api-runtime/build
-e export PATH=$PATH:$PWD/../doxygen/P/bin/
+# Set $PATH to include doxygen -- done previously
 e export PKG_CONFIG_PATH=$PWD/../dbus/P/lib/pkgconfig:$PWD/../dlt-daemon/P/lib/pkgconfig
 e mkdir -p build
 e cd build
@@ -161,7 +161,7 @@ e cd "$MYDIR"
 e cd vSomeIP
 e mkdir -p build
 e export BOOST_ROOT=$PWD/../boost/P/
-e export PATH=$PATH:$PWD/../doxygen/P/bin/
+# Set $PATH to include doxygen -- done previously
 e cd build
 e cmake ..
 e make -j8
