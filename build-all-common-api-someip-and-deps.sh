@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Input "sleep 1" or whatever you like as first argument
+DELAYCMD="$1"
+
 # Stop script on first failure
 set -e
 # Fail on unset variables
@@ -10,8 +13,6 @@ e() {
   $DELAYCMD
 }
 
-# Input "sleep 1" or whatever you like as first argument
-DELAYCMD="$1"
 
 # Base directory
 D=$(dirname "$0")
