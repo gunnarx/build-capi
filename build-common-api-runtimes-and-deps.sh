@@ -30,12 +30,13 @@ MYDIR="$PWD"
 # Of course we could check for that but lazy.
 set -x
 git clone --recursive https://github.com/boostorg/boost.git
-git clone http://git.projects.genivi.org/common-api/cpp-someip-runtime.git
 git clone http://git.projects.genivi.org/ipc/common-api-runtime.git
 git clone http://git.projects.genivi.org/ipc/common-api-dbus-runtime.git
+git clone http://git.projects.genivi.org/common-api/cpp-someip-runtime.git
 git clone http://git.projects.genivi.org/vSomeIP.git
 git clone http://git.projects.genivi.org/dlt-daemon.git
 git clone https://github.com/doxygen/doxygen.git
+git clone http://anongit.freedesktop.org/git/dbus/dbus.git
 
 # Stop script on first failure
 set -e
@@ -103,7 +104,42 @@ e export PATH=$PATH:$PWD/../doxygen/P/bin/     # so cmake can find doxygen exe
 e cd build
 e grep cmake ../INSTALL | sed 's@^\$@@' | sh 
 e make -j8
-# No make install, we just pick the binaries directly from the build directory
+# No make install, we use the binaries directly from the build directory
+
+# --- libdbus with CommonAPI C++ patch ---
+# Dependencies:
+# - autoconf (not built from source here)
+# - libtool  (not built from source here)
+# - expat    (libexpat-dev, not built from source here)
+# TODO
+e cd "$MYDIR"
+e cd dbus
+e git checkout dbus-1.9.0
+for f in ../common-api-dbus-runtime/src/dbus-patches/*.patch ; do
+  patch -p1 -N <"$f" 
+done
+e ./autogen.sh
+e ./configure --prefix $PWD/P
+e make -j8 -C dbus
+e make install
+
+# --- Common API C++ D-Bus Runtime ---
+# Dependencies:
+# - libdbus with special patch (built from source above)
+# - Common API C++ (built from source above)
+# - OPTIONAL: DLT (built from source above)
+e cd "$MYDIR"
+e cd common-api-dbus-runtime
+e export CommonAPI_DIR=$PWD/../common-api-runtime/build
+e export PATH=$PATH:$PWD/../doxygen/P/bin/
+e export PKG_CONFIG_PATH=$PWD/../dbus/P/lib/pkgconfig:$PWD/../dlt-daemon/P/lib/pkgconfig
+e mkdir -p build
+e cd build
+e cmake -D USE_INSTALLED_COMMONAPI=ON ..
+e make -j8
+# No make install, the result is in build directory
+
+
 
 # --- BOOST ---
 # Dependencies: Not much.
@@ -129,18 +165,7 @@ e export PATH=$PATH:$PWD/../doxygen/P/bin/
 e cd build
 e cmake ..
 e make -j8
-# No make install, we just pick the binaries directly from the build directory
-
-# --- libdbus with CommonAPI C++ patch ---
-# TODO
-
-# --- Common API C++ D-Bus Runtime ---
-# Dependencies:
-# - libdbus with special patch (built from source above)
-# - Common API C++ (built from source above)
-# - OPTIONAL: DLT (built from source above)
-# TODO
-
+# No make install, we use the binaries directly from the build directory
 
 # --- Common API C++ Some-IP Runtime ---
 # Dependencies:
@@ -156,6 +181,6 @@ e export CommonAPI_DIR=$PWD/../common-api-runtime/build
 e cd build
 e grep cmake ../INSTALL | sed 's@^\$@@' | sh 
 e make -j8
-# No make install, we just pick the binaries directly from the build directory
+# No make install, the result is in build directory
 
 
