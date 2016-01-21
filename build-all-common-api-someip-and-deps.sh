@@ -12,8 +12,6 @@
 # Input "sleep 1" or whatever you like as first argument
 DELAYCMD="$1"
 
-# Stop script on first failure
-set -e
 # Fail on unset variables
 set -u
 
@@ -28,6 +26,8 @@ D=$(dirname "$0")
 cd "$D"
 MYDIR="$PWD"
 
+# Allowing failures here, the normal failure is it's already cloned
+# Of course we could check for that but lazy.
 set -x
 git clone --recursive https://github.com/boostorg/boost.git
 git clone http://git.projects.genivi.org/common-api/cpp-someip-runtime.git
@@ -36,6 +36,9 @@ git clone http://git.projects.genivi.org/ipc/common-api-dbus-runtime.git
 git clone http://git.projects.genivi.org/vSomeIP.git
 git clone http://git.projects.genivi.org/dlt-daemon.git
 git clone https://github.com/doxygen/doxygen.git
+
+# Stop script on first failure
+set -e
 
 # --- DOXYGEN ---
 # Dependencies:
@@ -53,6 +56,7 @@ e make -j8
 e cd "$MYDIR"
 e cd dlt-daemon
 e mkdir -p build
+e export DLT_PKG_CONFIG_PATH=$PWD/P/lib/$(uname -m)-linux-gnu/pkgconfig
 e cd build
 e cmake -D CMAKE_INSTALL_PREFIX=$PWD/../P/ .. 
 e make -j8
@@ -75,7 +79,7 @@ e make install  # Need to install pkg-config files for later use
 # installed there <dlt/dlt.h> resolves to /usr/include/dlt/dlt.h.   This
 # however does not happen if a custom PREFIX is used for installation.
 
-sed -i 's#${includedir}/dlt#${includedir}#' $PKG_CONFIG_PATH/automotive-dlt.pc
+sed -i 's#${includedir}/dlt#${includedir}#' $DLT_PKG_CONFIG_PATH/automotive-dlt.pc
 
 # and libdir also needs fixing.  In this native build libs seem to be installed
 # under ${exec_prefix}/x86_64-linux-gnu/lib, not only ${exec_prefix}/lib !?
@@ -85,7 +89,7 @@ sed -i 's#${includedir}/dlt#${includedir}#' $PKG_CONFIG_PATH/automotive-dlt.pc
 correct_libdir="$\{exec_prefix\}/lib/$(uname -m)-linux-gnu"
 
 # Patch definition of libdir in DLT pkg_ config file
-sed -i "s#libdir=\${exec_prefix}/lib#libdir=$correct_libdir#" $PKG_CONFIG_PATH/automotive-dlt.pc
+sed -i "s#libdir=\${exec_prefix}/lib#libdir=$correct_libdir#" $DLT_PKG_CONFIG_PATH/automotive-dlt.pc
 
 # --- Common API C++ Runtime ---
 # Dependencies:
@@ -94,8 +98,8 @@ sed -i "s#libdir=\${exec_prefix}/lib#libdir=$correct_libdir#" $PKG_CONFIG_PATH/a
 e cd "$MYDIR"
 e cd common-api-runtime
 e mkdir -p build
-e export PKG_CONFIG_PATH=$PWD/../dlt-daemon/P/lib/$(uname -m)-linux-gnu/pkgconfig
-e export PATH=$PATH:$PWD/../doxygen/P/bin/
+e export PKG_CONFIG_PATH=$DLT_PKG_CONFIG_PATH  # so cmake can find DLT
+e export PATH=$PATH:$PWD/../doxygen/P/bin/     # so cmake can find doxygen exe
 e cd build
 e grep cmake ../INSTALL | sed 's@^\$@@' | sh 
 e make -j8
@@ -121,7 +125,7 @@ e cd "$MYDIR"
 e cd vSomeIP
 e mkdir -p build
 e export BOOST_ROOT=$PWD/../boost/P/
-e export PATH=$PATH:$PWD/../../doxygen/P/bin/
+e export PATH=$PATH:$PWD/../doxygen/P/bin/
 e cd build
 e cmake ..
 e make -j8
