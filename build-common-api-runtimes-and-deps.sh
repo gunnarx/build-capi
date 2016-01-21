@@ -117,8 +117,9 @@ e make -j8
 e cd "$MYDIR"
 e cd dbus
 e git checkout dbus-1.9.0
+e git reset --hard  # <- reapply patches successfully if script is rerun
 for f in ../common-api-dbus-runtime/src/dbus-patches/*.patch ; do
-  patch -p1 -N <"$f" || true
+  patch -p1 -N <"$f"
 done
 e ./autogen.sh
 e ./configure --prefix $PWD/P
